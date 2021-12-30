@@ -1,0 +1,32 @@
+#!/bin/env bash
+
+GANDI_API_KEY=${GANDI_API_KEY:="missing"}
+GANDI_WAIT_SEC=${GANDI_WAIT_SEC:=30}
+
+echo "Certbot domain- ${CERTBOT_DOMAIN}"
+echo "Certbot key- ${CERTBOT_VALIDATION}"
+
+# PUT overwrite existign record when using PUT
+function update() {
+  curl -s -X PUT https://api.gandi.net/v5/livedns/domains/${CERTBOT_DOMAIN}/records/_acme-challenge.${CERTBOT_DOMAIN}. \
+        -H "Authorization: Apikey $GANDI_API_KEY" \
+        -H "Content-Type: application/json" \
+        --data "{\"items\": [{\"rrset_type\": \"TXT\", \"rrset_values\": [$rrset], \"rrset_ttl\": \"300\"}]}"
+}
+
+
+curr=$(curl -s -H "Authorization: Apikey ${GANDI_API_KEY}" https://api.gandi.net/v5/livedns/domains/${CERTBOT_DOMAIN}/records/_acme-challenge.${CERTBOT_DOMAIN}.)
+echo "Current Records: $curr"
+
+if [ "$curr" == "[]" ]; then
+  echo "No records exist"
+  rrset=\"${CERTBOT_VALIDATION}\"
+  update
+else
+  # Merge new record with old, needed when using multiple domain e.g. example.com and *.example.com
+  rrset="\"${CERTBOT_VALIDATION}\",$(echo $curr  | jq -r '.[].rrset_values | join(",")')"
+  echo $rrset
+  update
+  # 10 seconds is fine 30 seconds is safer
+  sleep $GANDI_WAIT_SEC
+fi
