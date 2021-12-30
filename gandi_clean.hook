@@ -3,4 +3,4 @@
 GANDI_API_KEY=${GANDI_API_KEY:="missing"}
 
 echo "Clearing record- _acme-challenge.${CERTBOT_DOMAIN}"
-curl -s -X DELETE -H "Authorization: Apikey ${APIKEY}" https://api.gandi.net/v5/livedns/domains/${CERTBOT_DOMAIN}/records/_acme-challenge.${CERTBOT_DOMAIN}
+curl -s -X DELETE -H "Authorization: Apikey ${GANDI_API_KEY}" https://api.gandi.net/v5/livedns/domains/${CERTBOT_DOMAIN}/records/_acme-challenge.${CERTBOT_DOMAIN}
